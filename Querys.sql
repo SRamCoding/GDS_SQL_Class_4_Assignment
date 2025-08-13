@@ -242,53 +242,233 @@ select t1.total_earnings, t2.total_employees
 from t1, t2;
 
 -- Q108:
-/*We define an employee's total 
-earnings to be their monthly 
-salary * months worked, and the
-maximum total earnings to be the 
-maximum total earnings for any 
-employee in the Employee table.
-Write a query to find the maximum 
-total earnings for all employees 
-as well as the total number of
-employees who have maximum total 
-earnings. Then print these values 
-as 2 space-separated integers.*/
+/*Generate the following two result sets:
+1. Query an alphabetically ordered list 
+of all names in OCCUPATIONS, immediately 
+followed by the first letter of each 
+profession as a parenthetical (i.e.: 
+enclosed in parentheses). For example: 
+AnActorName(A), ADoctorName(D), 
+AProfessorName(P), and ASingerName(S).
+Query the number of occurrences of each 
+occupation in OCCUPATIONS. Sort the 
+occurrences in ascending order, and 
+output them in the following format:
+Level - Medium
+There are a total of [occupation_count] 
+[occupation]s.
+2. where [occupation_count] is the number 
+of occurrences of an occupation in 
+OCCUPATIONS and [occupation] is the 
+lowercase occupation name. If more than 
+one Occupation has the same 
+[occupation_count], they should be 
+ordered alphabetically.
+Note: There will be at least two entries 
+in the table for each type of occupation.
+Input Format*/
+select name, left(Occupation, 1) as result
+from Q108_OCCUPATIONS
 
+union all 
 
+select 'There are', concat(count(*), ' ', Occupation, 's')  as result
+from Q108_OCCUPATIONS
+group by Occupation; 
 
+create table if not exists Q108_OCCUPATIONS
+(
+	name varchar(15),
+    Occupation enum('Doctor', 'Professor', 'Singer', 'Actor')
+);
 
+insert into Q108_OCCUPATIONS (name, Occupation) 
+values
+('Samantha', 'Doctor'),
+('Julia', 'Actor'),
+('Maria', 'Actor'),
+('Meera', 'Singer'),
+('Ashely', 'Professor'),
+('Ketty', 'Professor'),
+('Christeen', 'Professor'),
+('Jane', 'Actor'),
+('Jenny', 'Doctor'),
+('Priya', 'Singer');
 
+-- Q109: 
+/*Pivot the Occupation column in 
+OCCUPATIONS so that each Name is 
+sorted alphabetically and
+displayed underneath its 
+corresponding Occupation. The 
+output column headers should be 
+Doctor, Professor, Singer, and 
+Actor, respectively.
+Note: Print NULL when there are 
+no more names corresponding to 
+an occupation.*/
+with t1 as
+(select Occupation, name, row_number() over (partition by Occupation order by name) as r
+from Q108_OCCUPATIONS)
 
+select 	max(case when Occupation = 'Doctor' then name end) as Doctor,
+		max(case when Occupation = 'Professor' then name end) as Professor,
+        max(case when Occupation = 'Singer' then name end) as Singer,
+        max(case when Occupation = 'Actor' then name end) as Actor
+from t1
+group by r;
 
+-- Q110: 
+/*You are given a table, BST, 
+containing two columns: N and P, 
+where N represents the value of a 
+node in Binary Tree, and P is the 
+parent of N.
+Write a query to find the node 
+type of Binary Tree ordered by 
+the value of the node. Output one 
+of the
+following for each node:
+● Root: If node is root node.
+● Leaf: If node is leaf node.
+● Inner: If node is neither root 
+nor leaf node.*/
+with t1 as
+(select N, 'Root' as result 
+from Q110_BST 
+where P is null
 
+union all
 
+select N, 'Leaf' as result
+from Q110_BST 
+where N not in (select distinct P from Q110_BST where P is not null)),
 
+t2 as 
+(select Q110_BST.N, 'Inner' as result 
+from Q110_BST
+left join t1 
+on Q110_BST.N = t1.N
+where t1.N is null),
 
+t3 as
+(select * from t1
+union all
+select * from t2)
 
+select * from t3 order by N;
 
+create table if not exists Q110_BST
+(
+	N int,
+    P int
+);
 
+insert into Q110_BST (N, P) 
+values
+(1, 2),
+(3, 2),
+(6, 8),
+(9, 8),
+(2, 5),
+(8, 5),
+(5, null);
 
+-- Q111: 
+/*Amber's conglomerate corporation just 
+acquired some new companies. Each of the 
+companies follows this hierarchy:
+			Founder
+               -
+			 Lead Manager
+				-
+			  Senior Manager
+				 -
+			   Manager	
+				  -
+				Employee
+                
+Given the table schemas below, write 
+a query to print the company_code, 
+founder name, total number of lead 
+managers, total number of senior 
+managers, total number of managers, 
+and total number of employees. Order 
+your output by ascending company_code.
+Level - Medium
+Note:
+● The tables may contain duplicate 
+records.
+● The company_code is string, so the 
+sorting should not be numeric. For 
+example, if the company_codes are C_1, 
+C_2, and C_10, then the ascending 
+company_codes will be C_1, C_10, and C_2.*/
 
+create table if not exists Q111_Company
+(
+	company_code varchar(5),
+    founder varchar(20)
+);
 
+create table if not exists Q111_Lead_Manager
+(
+	lead_manager_code varchar(5),
+    company_code varchar(5)
+);
 
+create table if not exists Q111_Senior_Manager
+(
+	senior_manager_code varchar(5),
+	lead_manager_code varchar(5),
+    company_code varchar(5)
+);
 
+create table if not exists Q111_Manager
+(
+	manager_code varchar(5),
+    senior_manager_code varchar(5),
+    lead_manager_code varchar(5),
+    company_code varchar(5)
+);
 
+create table if not exists Q111_Employee
+(
+	employee_code varchar(5),
+	manager_code varchar(5),
+    senior_manager_code varchar(5),
+    lead_manager_code varchar(5),
+    company_code varchar(5)
+);
 
+insert into Q111_Company (company_code, founder) 
+values
+('C1', 'Monika'),
+('C2', 'Samantha');
 
+insert into Q111_Lead_Manager (lead_manager_code, company_code) 
+values
+('LM1', 'C1'),
+('LM2', 'C2');
 
+insert into Q111_Senior_Manager (senior_manager_code, lead_manager_code, company_code) 
+values
+('SM1', 'LM1', 'C1'),
+('SM2', 'LM1', 'C1'),
+('SM3', 'LM2', 'C2');
 
+insert into Q111_Manager (manager_code, senior_manager_code, lead_manager_code, company_code) 
+values
+('M1', 'SM1', 'LM1', 'C1'),
+('M2', 'SM3', 'LM2', 'C2'),
+('M3', 'SM3', 'LM2', 'C2');
 
-
-
-
-
-
-
-
-
-
-
+insert into Q111_Employee (employee_code, manager_code, senior_manager_code, lead_manager_code, company_code) 
+values
+('E1', 'M1', 'SM1', 'LM1', 'C1'),
+('E2', 'M1', 'SM1', 'LM1', 'C1'),
+('E3', 'M2', 'SM3', 'LM2', 'C2'),
+('E4', 'M3', 'SM3', 'LM2', 'C2');
 
 
 
